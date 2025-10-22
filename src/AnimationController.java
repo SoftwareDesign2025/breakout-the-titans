@@ -15,7 +15,6 @@ import java.util.List;
  * modified to be starting point of breakout lab
  */
 
-
 public class AnimationController {
 
 	private int width;
@@ -33,8 +32,8 @@ public class AnimationController {
 
 		// create one top level collection to organize the things in the scene
 		Group root = new Group();
+
 		// make some shapes and set their properties
-		
 		gameBall = new Ball(width/2, height/2);
 		paddle = new Rectangle(100,100);
 
@@ -73,7 +72,6 @@ public class AnimationController {
 
 	public void step (double elapsedTime) {
 		// update "actors" attributes
-		
 		gameBall.move(elapsedTime);
 		gameBall.wallBounce(width, height);
 		gameBall.paddleBounce(gamePaddle.getView());

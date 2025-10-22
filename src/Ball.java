@@ -1,8 +1,5 @@
 import java.util.Random;
-
 import javafx.geometry.Point2D;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -29,34 +26,30 @@ public class Ball {
 		return ball;
 	}
 	
-	 // Move the ball based on velocity and elapsed time
     public void move(double elapsedTime) {
         ball.setCenterX(ball.getCenterX() + ballVelocity.getX() * elapsedTime);
         ball.setCenterY(ball.getCenterY() + ballVelocity.getY() * elapsedTime);
     }
     
-    // Bounce off screen edges
     public void wallBounce(double screenWidth, double screenHeight) {
-
-        // bounce horizontally
         if (ball.getCenterX() - BALL_RADIUS <= 0 || ball.getCenterX() + BALL_RADIUS >= screenWidth) {
             ballVelocity = new Point2D(-ballVelocity.getX(), ballVelocity.getY());
         }
 
-        // bounce vertically
         if (ball.getCenterY() - BALL_RADIUS <= 0 || ball.getCenterY() + BALL_RADIUS >= screenHeight) {
             ballVelocity = new Point2D(ballVelocity.getX(), -ballVelocity.getY());
         }
     }
     
-    // Bounce off paddle
+    // ADDED: refined paddle collision bounce
     public void paddleBounce(Rectangle paddle) {
     	Shape intersection = Shape.intersect(ball, paddle);
 		if (intersection.getBoundsInLocal().getWidth() != -1) {
-			if (ball.getCenterY() < paddle.getY() && ballVelocity.getY() > 0) {
-				
+			// only bounce upward if ball was descending
+			if (ballVelocity.getY() > 0) {
+				ballVelocity = new Point2D(ballVelocity.getX(), -ballVelocity.getY());
+				ball.setCenterY(paddle.getY() - BALL_RADIUS - 1); // prevent sticking
 			}
-
 		}
     }
     public void reverseY() {

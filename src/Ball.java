@@ -52,4 +52,9 @@ public class Ball {
 			}
 		}
     }
+    public void reverseY() {
+        ballVelocity = new Point2D(ballVelocity.getX(), -ballVelocity.getY());
+    }
+    
+    //We should add a general bounce method that can be applied to the bricks + paddle + wall
 }

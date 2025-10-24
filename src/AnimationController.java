@@ -59,10 +59,10 @@ public class AnimationController {
 		bricks = new ArrayList<>();
 
 		int rows = 5;
-		int cols = 7;
-		int spacing = 5;
-		int brickWidth = 50;
-		int brickHeight = 20;
+		int cols = 12;
+		int spacing = 3;
+		int brickWidth = 60;
+		int brickHeight = 30;
 		int offsetX = 20;
 		int offsetY = 40;
 

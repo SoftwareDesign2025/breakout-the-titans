@@ -52,7 +52,8 @@ public class Ball {
         }
         
         if (ball.getCenterY() + BALL_RADIUS >= screenHeight) {
-        	resetBall(defaultXPosition, defaultYPosition);
+            // shows that it fell off bottom
+            ballVelocity = Point2D.ZERO;
         }
     }
     

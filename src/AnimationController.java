@@ -99,7 +99,7 @@ public class AnimationController {
 		// update "actors" attributes
 		gameBall.move(elapsedTime);
 		gameBall.wallBounce(width, height);
-		gameBall.paddleBounce(gamePaddle.getView());
+		gameBall.objectBounce(gamePaddle.getView());
 
 		// check for collisions
 		// with shapes, can check precisely
@@ -121,6 +121,7 @@ public class AnimationController {
 //		    myGrower.setFill(HIGHLIGHT);
 //		}
 
+		// removes brick if contacted by ball 
 		Iterator<Brick> iter = bricks.iterator();
 		while (iter.hasNext()) {
 		    Brick brick = iter.next();
@@ -137,6 +138,7 @@ public class AnimationController {
 		        break;
 		    }
 		}
+		
 	}
 	
 	public void moverMovesHorizontally(boolean goLeft) {

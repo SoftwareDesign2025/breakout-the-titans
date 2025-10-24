@@ -4,6 +4,8 @@ import javafx.scene.shape.Rectangle;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import javafx.scene.text.Text;
+import javafx.scene.text.Font;
 
 /**
  * 
@@ -25,6 +27,19 @@ public class AnimationController {
 
 	private Paddle gamePaddle;
 	private List<Brick> bricks;
+	
+	private int score;
+	private int highScore;
+	private Text scoreText;
+	private Text highScoreText;
+	
+	private boolean moveLeft = false;
+	private boolean moveRight = false;
+	
+	// for live and level control
+	private int lives;
+	private Text livesText;
+	private boolean gameOver = false;
 
 	public Group createRootForAnimation(int windowWidth, int windowHeight) {
 		width = windowWidth;
@@ -44,10 +59,10 @@ public class AnimationController {
 		bricks = new ArrayList<>();
 
 		int rows = 5;
-		int cols = 7;
-		int spacing = 5;
-		int brickWidth = 50;
-		int brickHeight = 20;
+		int cols = 12;
+		int spacing = 3;
+		int brickWidth = 60;
+		int brickHeight = 30;
 		int offsetX = 20;
 		int offsetY = 40;
 
@@ -67,10 +82,57 @@ public class AnimationController {
 //		}
 //		catch (FileNotFoundException e) {}
 		
+		score = 0;
+		highScore = 0;
+		
+		lives = 3; // starting number of lives
+		livesText = new Text(width / 2.0 - 30, height - 10, "Lives: " + lives);
+		livesText.setFill(Color.WHITE);
+		livesText.setFont(Font.font(16));
+
+		root.getChildren().add(livesText);
+
+		scoreText = new Text(10, height - 10, "Score: " + score);
+		scoreText.setFill(Color.WHITE);
+		scoreText.setFont(Font.font(16));
+
+		highScoreText = new Text(width - 150, height - 10, "High Score: " + highScore);
+		highScoreText.setFill(Color.WHITE);
+		highScoreText.setFont(Font.font(16));
+
+		root.getChildren().addAll(scoreText, highScoreText);
+		
 		return root;
+	}
+	
+	private void updateScoreDisplay() {
+	    scoreText.setText("Score: " + score);
+	    highScoreText.setText("High Score: " + highScore);
+	}
+	
+	private void updateLivesDisplay() {
+	    livesText.setText("Lives: " + lives);
+	}
+
+	private void endGame(boolean playerWon) {
+	    gameOver = true;
+	    Text endText = new Text(width / 2.0 - 60, height / 2.0, 
+	            playerWon ? "YOU WIN!" : "GAME OVER");
+	    endText.setFill(Color.YELLOW);
+	    endText.setFont(Font.font(24));
+
+	    Text restartText = new Text(width / 2.0 - 90, height / 2.0 + 30, "Press SPACE to restart");
+	    restartText.setFill(Color.WHITE);
+	    restartText.setFont(Font.font(16));
+
+	    Group root = (Group) livesText.getParent();
+	    root.getChildren().addAll(endText, restartText);
 	}
 
 	public void step (double elapsedTime) {
+		// smooth paddles
+		if (moveLeft)  gamePaddle.moveLeft(elapsedTime);
+	    if (moveRight) gamePaddle.moveRight(elapsedTime);
 		// update "actors" attributes
 		gameBall.move(elapsedTime);
 		gameBall.wallBounce(width, height);
@@ -100,23 +162,82 @@ public class AnimationController {
 		Iterator<Brick> iter = bricks.iterator();
 		while (iter.hasNext()) {
 		    Brick brick = iter.next();
-		    if (brick.isHitByBall(gameBall.getBall())) {
-		        gameBall.objectBounce(brick.getView());
-		        brick.getView().setVisible(false);
+		    int earnedPoints = brick.handleHit(gameBall.getBall());
+		    if (earnedPoints > 0) {
 		        iter.remove();
+		        gameBall.reverseY();
+
+		        score += earnedPoints;
+		        if (score > highScore) {
+		            highScore = score;
+		        }
+		        updateScoreDisplay();
 		        break;
+		    }
+		}
+		
+		// if ball fell off bottom, lose a life and reset
+		if (gameBall.getBall().getCenterY() + Ball.BALL_RADIUS >= height && !gameOver) {
+		    lives--;
+		    updateLivesDisplay();
+
+		    if (lives <= 0) {
+		        endGame(false);
+		    } else {
+		        // reset ball to center
+		        gameBall.resetBall(width / 2, height / 2);
 		    }
 		}
 		
 	}
 	
-	public void moverMovesHorizontally(boolean goLeft) {
+	public void restartGame() {
+	    // restart if game is over
+	    if (!gameOver) return;
+
+	    // reset
+	    gameOver = false;
+	    lives = 3;
+	    score = 0;
+	    updateScoreDisplay();
+	    updateLivesDisplay();
+
+	    // Clear any text
+	    Group root = (Group) livesText.getParent();
+	    root.getChildren().removeIf(node -> node instanceof Text && node != scoreText && node != highScoreText && node != livesText);
+	    // remove rectangles of bricks
+	    root.getChildren().removeIf(node -> node instanceof Rectangle && node != gamePaddle.getView());
+	    
+	    // restarts brickss
+	    bricks.clear();
+	    int rows = 5;
+	    int cols = 10;
+	    int spacing = 5;
+	    int brickWidth = 60;
+	    int brickHeight = 20;
+	    int offsetX = 30;
+	    int offsetY = 40;
+	    for (int row = 0; row < rows; row++) {
+	        for (int col = 0; col < cols; col++) {
+	            int x = offsetX + col * (brickWidth + spacing);
+	            int y = offsetY + row * (brickHeight + spacing);
+	            Color color = Color.hsb((row * 60) % 360, 0.8, 0.9);
+	            Brick brick = new Brick(x, y, 100, color);
+	            bricks.add(brick);
+	            root.getChildren().add(brick.getView());
+	        }
+	    }
+
+	    // reset ball & paddle
+	    gameBall.resetBall(width / 2, height / 2);
+	    gamePaddle.getView().setX((width - 80) / 2.0); // recenter paddle
+	}
+	
+	public void moverMovesHorizontally(boolean goLeft, boolean isPressed) {
 	    if (goLeft) {
-	        // myMover.setX(myMover.getX() - MOVER_SPEED);
-	        gamePaddle.moveLeft();
+	        moveLeft = isPressed;
 	    } else {
-	        // myMover.setX(myMover.getX() + MOVER_SPEED);
-	        gamePaddle.moveRight();
+	        moveRight = isPressed;
 	    }
 	}
 

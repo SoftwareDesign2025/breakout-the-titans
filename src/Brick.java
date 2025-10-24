@@ -27,4 +27,12 @@ public class Brick {
 	public boolean isHitByBall(Circle ball) {
 		return view.getBoundsInParent().intersects(ball.getBoundsInParent());
 	}
+	
+	public int handleHit(Circle ball) {
+	    if (isHitByBall(ball)) {
+	        view.setVisible(false);
+	        return pointValue; 
+	    }
+	    return 0;
+	}
 }

@@ -120,7 +120,13 @@ public class AnimationController {
 	            playerWon ? "YOU WIN!" : "GAME OVER");
 	    endText.setFill(Color.YELLOW);
 	    endText.setFont(Font.font(24));
-	    ((Group) livesText.getParent()).getChildren().add(endText);
+
+	    Text restartText = new Text(width / 2.0 - 90, height / 2.0 + 30, "Press SPACE to restart");
+	    restartText.setFill(Color.WHITE);
+	    restartText.setFont(Font.font(16));
+
+	    Group root = (Group) livesText.getParent();
+	    root.getChildren().addAll(endText, restartText);
 	}
 
 	public void step (double elapsedTime) {
@@ -183,6 +189,48 @@ public class AnimationController {
 		    }
 		}
 		
+	}
+	
+	public void restartGame() {
+	    // restart if game is over
+	    if (!gameOver) return;
+
+	    // reset
+	    gameOver = false;
+	    lives = 3;
+	    score = 0;
+	    updateScoreDisplay();
+	    updateLivesDisplay();
+
+	    // Clear any text
+	    Group root = (Group) livesText.getParent();
+	    root.getChildren().removeIf(node -> node instanceof Text && node != scoreText && node != highScoreText && node != livesText);
+	    // remove rectangles of bricks
+	    root.getChildren().removeIf(node -> node instanceof Rectangle && node != gamePaddle.getView());
+	    
+	    // restarts brickss
+	    bricks.clear();
+	    int rows = 5;
+	    int cols = 10;
+	    int spacing = 5;
+	    int brickWidth = 60;
+	    int brickHeight = 20;
+	    int offsetX = 30;
+	    int offsetY = 40;
+	    for (int row = 0; row < rows; row++) {
+	        for (int col = 0; col < cols; col++) {
+	            int x = offsetX + col * (brickWidth + spacing);
+	            int y = offsetY + row * (brickHeight + spacing);
+	            Color color = Color.hsb((row * 60) % 360, 0.8, 0.9);
+	            Brick brick = new Brick(x, y, 100, color);
+	            bricks.add(brick);
+	            root.getChildren().add(brick.getView());
+	        }
+	    }
+
+	    // reset ball & paddle
+	    gameBall.resetBall(width / 2, height / 2);
+	    gamePaddle.getView().setX((width - 80) / 2.0); // recenter paddle
 	}
 	
 	public void moverMovesHorizontally(boolean goLeft, boolean isPressed) {

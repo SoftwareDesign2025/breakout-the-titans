@@ -67,7 +67,10 @@ public class Main extends Application {
 		        myAnimation.moverMovesHorizontally(true, true);
 		    } else if (e.getCode() == KeyCode.RIGHT) {
 		        myAnimation.moverMovesHorizontally(false, true);
+		    } else if (e.getCode() == KeyCode.SPACE) {
+		        myAnimation.restartGame();
 		    }
+		    
 		});
 
 		scene.setOnKeyReleased(e -> {

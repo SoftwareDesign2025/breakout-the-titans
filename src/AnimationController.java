@@ -100,12 +100,8 @@ public class AnimationController {
 
 	public void step (double elapsedTime) {
 		// smooth paddles
-		if (moveLeft) {
-		    gamePaddle.moveLeft();
-		}
-		if (moveRight) {
-		    gamePaddle.moveRight();
-		}
+		if (moveLeft)  gamePaddle.moveLeft(elapsedTime);
+	    if (moveRight) gamePaddle.moveRight(elapsedTime);
 		// update "actors" attributes
 		gameBall.move(elapsedTime);
 		gameBall.wallBounce(width, height);

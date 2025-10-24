@@ -9,6 +9,8 @@ import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+// Joe was here
+
 /**
  * A basic example JavaFX program for the first lab.
  * 

@@ -35,6 +35,11 @@ public class AnimationController {
 	
 	private boolean moveLeft = false;
 	private boolean moveRight = false;
+	
+	// for live and level control
+	private int lives;
+	private Text livesText;
+	private boolean gameOver = false;
 
 	public Group createRootForAnimation(int windowWidth, int windowHeight) {
 		width = windowWidth;
@@ -54,10 +59,10 @@ public class AnimationController {
 		bricks = new ArrayList<>();
 
 		int rows = 5;
-		int cols = 7;
-		int spacing = 5;
-		int brickWidth = 50;
-		int brickHeight = 20;
+		int cols = 12;
+		int spacing = 3;
+		int brickWidth = 60;
+		int brickHeight = 30;
 		int offsetX = 20;
 		int offsetY = 40;
 
@@ -79,6 +84,13 @@ public class AnimationController {
 		
 		score = 0;
 		highScore = 0;
+		
+		lives = 3; // starting number of lives
+		livesText = new Text(width / 2.0 - 30, height - 10, "Lives: " + lives);
+		livesText.setFill(Color.WHITE);
+		livesText.setFont(Font.font(16));
+
+		root.getChildren().add(livesText);
 
 		scoreText = new Text(10, height - 10, "Score: " + score);
 		scoreText.setFill(Color.WHITE);
@@ -97,15 +109,24 @@ public class AnimationController {
 	    scoreText.setText("Score: " + score);
 	    highScoreText.setText("High Score: " + highScore);
 	}
+	
+	private void updateLivesDisplay() {
+	    livesText.setText("Lives: " + lives);
+	}
+
+	private void endGame(boolean playerWon) {
+	    gameOver = true;
+	    Text endText = new Text(width / 2.0 - 60, height / 2.0, 
+	            playerWon ? "YOU WIN!" : "GAME OVER");
+	    endText.setFill(Color.YELLOW);
+	    endText.setFont(Font.font(24));
+	    ((Group) livesText.getParent()).getChildren().add(endText);
+	}
 
 	public void step (double elapsedTime) {
 		// smooth paddles
-		if (moveLeft) {
-		    gamePaddle.moveLeft();
-		}
-		if (moveRight) {
-		    gamePaddle.moveRight();
-		}
+		if (moveLeft)  gamePaddle.moveLeft(elapsedTime);
+	    if (moveRight) gamePaddle.moveRight(elapsedTime);
 		// update "actors" attributes
 		gameBall.move(elapsedTime);
 		gameBall.wallBounce(width, height);
@@ -146,6 +167,19 @@ public class AnimationController {
 		        }
 		        updateScoreDisplay();
 		        break;
+		    }
+		}
+		
+		// if ball fell off bottom, lose a life and reset
+		if (gameBall.getBall().getCenterY() + Ball.BALL_RADIUS >= height && !gameOver) {
+		    lives--;
+		    updateLivesDisplay();
+
+		    if (lives <= 0) {
+		        endGame(false);
+		    } else {
+		        // reset ball to center
+		        gameBall.resetBall(width / 2, height / 2);
 		    }
 		}
 		

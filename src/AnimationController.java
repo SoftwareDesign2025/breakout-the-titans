@@ -140,8 +140,8 @@ public class AnimationController {
 		    Brick brick = iter.next();
 		    int earnedPoints = brick.handleHit(gameBall.getBall());
 		    if (earnedPoints > 0) {
+		    	gameBall.objectBounce(brick.getView());
 		        iter.remove();
-		        gameBall.reverseY();
 
 		        score += earnedPoints;
 		        if (score > highScore) {

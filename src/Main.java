@@ -60,9 +60,22 @@ public class Main extends Application {
 		Group root = myAnimation.createRootForAnimation(width, height);
 		// create a place to see the shapes
 		Scene scene = new Scene(root, width, height, background);
-		// respond to input
-		scene.setOnKeyPressed(e -> handleKeyInput(e.getCode()));
-		scene.setOnMouseClicked(e -> handleMouseInput(e.getX(), e.getY()));
+		// respond to input (smooth implemented - replaced handlekeyinput)
+		scene.setOnKeyPressed(e -> {
+		    if (e.getCode() == KeyCode.LEFT) {
+		        myAnimation.moverMovesHorizontally(true, true);
+		    } else if (e.getCode() == KeyCode.RIGHT) {
+		        myAnimation.moverMovesHorizontally(false, true);
+		    }
+		});
+
+		scene.setOnKeyReleased(e -> {
+		    if (e.getCode() == KeyCode.LEFT) {
+		        myAnimation.moverMovesHorizontally(true, false);
+		    } else if (e.getCode() == KeyCode.RIGHT) {
+		        myAnimation.moverMovesHorizontally(false, false);
+		    }
+		});
 		return scene;
 	}
 
@@ -70,16 +83,6 @@ public class Main extends Application {
 	// every 15 milliseconds or so!
 	private void step (double elapsedTime) {
 		myAnimation.step(elapsedTime);
-	}
-
-	// What to do each time a key is pressed
-	private void handleKeyInput (KeyCode code) {
-		if (code == KeyCode.LEFT) {
-			myAnimation.moverMovesHorizontally(true);
-		}
-		else if (code == KeyCode.RIGHT) {
-			myAnimation.moverMovesHorizontally(false);
-		}
 	}
 
 	// What to do each time a key is pressed

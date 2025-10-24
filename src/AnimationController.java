@@ -32,6 +32,9 @@ public class AnimationController {
 	private int highScore;
 	private Text scoreText;
 	private Text highScoreText;
+	
+	private boolean moveLeft = false;
+	private boolean moveRight = false;
 
 	public Group createRootForAnimation(int windowWidth, int windowHeight) {
 		width = windowWidth;
@@ -96,6 +99,13 @@ public class AnimationController {
 	}
 
 	public void step (double elapsedTime) {
+		// smooth paddles
+		if (moveLeft) {
+		    gamePaddle.moveLeft();
+		}
+		if (moveRight) {
+		    gamePaddle.moveRight();
+		}
 		// update "actors" attributes
 		gameBall.move(elapsedTime);
 		gameBall.wallBounce(width, height);
@@ -141,13 +151,11 @@ public class AnimationController {
 		
 	}
 	
-	public void moverMovesHorizontally(boolean goLeft) {
+	public void moverMovesHorizontally(boolean goLeft, boolean isPressed) {
 	    if (goLeft) {
-	        // myMover.setX(myMover.getX() - MOVER_SPEED);
-	        gamePaddle.moveLeft();
+	        moveLeft = isPressed;
 	    } else {
-	        // myMover.setX(myMover.getX() + MOVER_SPEED);
-	        gamePaddle.moveRight();
+	        moveRight = isPressed;
 	    }
 	}
 

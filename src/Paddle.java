@@ -4,7 +4,7 @@ import javafx.scene.shape.Rectangle;
 public class Paddle {
     private static final int WIDTH = 80;
     private static final int HEIGHT = 15;
-    private static final int MOVE_DISTANCE = 15;
+    private static final int MOVE_DISTANCE = 8;
 
     private Rectangle view;
 

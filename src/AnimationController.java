@@ -4,6 +4,8 @@ import javafx.scene.shape.Rectangle;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import javafx.scene.text.Text;
+import javafx.scene.text.Font;
 
 /**
  * 
@@ -25,6 +27,11 @@ public class AnimationController {
 
 	private Paddle gamePaddle;
 	private List<Brick> bricks;
+	
+	private int score;
+	private int highScore;
+	private Text scoreText;
+	private Text highScoreText;
 
 	public Group createRootForAnimation(int windowWidth, int windowHeight) {
 		width = windowWidth;
@@ -67,7 +74,25 @@ public class AnimationController {
 //		}
 //		catch (FileNotFoundException e) {}
 		
+		score = 0;
+		highScore = 0;
+
+		scoreText = new Text(10, height - 10, "Score: " + score);
+		scoreText.setFill(Color.WHITE);
+		scoreText.setFont(Font.font(16));
+
+		highScoreText = new Text(width - 150, height - 10, "High Score: " + highScore);
+		highScoreText.setFill(Color.WHITE);
+		highScoreText.setFont(Font.font(16));
+
+		root.getChildren().addAll(scoreText, highScoreText);
+		
 		return root;
+	}
+	
+	private void updateScoreDisplay() {
+	    scoreText.setText("Score: " + score);
+	    highScoreText.setText("High Score: " + highScore);
 	}
 
 	public void step (double elapsedTime) {
@@ -98,13 +123,19 @@ public class AnimationController {
 
 		Iterator<Brick> iter = bricks.iterator();
 		while (iter.hasNext()) {
-			Brick brick = iter.next();
-			if (brick.isHitByBall(gameBall.getBall())) {
-				gameBall.reverseY();
-				brick.getView().setVisible(false);
-				iter.remove();
-				break;
-			}
+		    Brick brick = iter.next();
+		    int earnedPoints = brick.handleHit(gameBall.getBall());
+		    if (earnedPoints > 0) {
+		        iter.remove();
+		        gameBall.reverseY();
+
+		        score += earnedPoints;
+		        if (score > highScore) {
+		            highScore = score;
+		        }
+		        updateScoreDisplay();
+		        break;
+		    }
 		}
 	}
 	

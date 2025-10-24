@@ -101,6 +101,8 @@ public class Ball {
             reverseY();
             ball.setCenterY(rectBottom + BALL_RADIUS + 1);
         }
+        
+        // add corner detection
     }
 
 }

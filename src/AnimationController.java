@@ -77,10 +77,6 @@ public class AnimationController {
 			}
 		}
 
-//		try {
-//			// for adding objects from image file
-//		}
-//		catch (FileNotFoundException e) {}
 		
 		score = 0;
 		highScore = 0;
@@ -138,34 +134,14 @@ public class AnimationController {
 		gameBall.wallBounce(width, height);
 		gameBall.objectBounce(gamePaddle.getView());
 
-		// check for collisions
-		// with shapes, can check precisely
-		// Shape intersection = Shape.intersect(myMover, myGrower);
-//		if (intersection.getBoundsInLocal().getWidth() != -1) {
-//			
-//
-//		}
-		
-		// with images can only check bounding box
-//		boolean hit = false;
-//		for (Bouncer b : myBouncers) {
-//			if (myGrower.getBoundsInParent().intersects(b.getView().getBoundsInParent())) {
-//
-//				hit = true;
-//			}
-//		}
-//		if (hit) {
-//		    myGrower.setFill(HIGHLIGHT);
-//		}
-
 		// removes brick if contacted by ball 
 		Iterator<Brick> iter = bricks.iterator();
 		while (iter.hasNext()) {
 		    Brick brick = iter.next();
 		    int earnedPoints = brick.handleHit(gameBall.getBall());
 		    if (earnedPoints > 0) {
+		    	gameBall.objectBounce(brick.getView());
 		        iter.remove();
-		        gameBall.reverseY();
 
 		        score += earnedPoints;
 		        if (score > highScore) {

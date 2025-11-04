@@ -88,10 +88,6 @@ public class AnimationController {
 			}
 		}
 
-//		try {
-//			// for adding objects from image file
-//		}
-//		catch (FileNotFoundException e) {}
 		
 		score = 0;
 		highScore = 0;

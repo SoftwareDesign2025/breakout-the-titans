@@ -183,7 +183,7 @@ public class AnimationController {
 		            updateScoreDisplay();
 
 		            // Randomly spawn a power-up
-		            if (Math.random() < 0.2) { // 20% chance
+		            if (Math.random() < 0.25) { // 25% chance
 		                PowerUp.Type type = Math.random() < 0.5 ? PowerUp.Type.MULTI_BALL : PowerUp.Type.MULTI_PADDLE;
 		                PowerUp pu = new PowerUp((int)brick.getView().getX(), (int)brick.getView().getY(), type);
 		                powerUps.add(pu);

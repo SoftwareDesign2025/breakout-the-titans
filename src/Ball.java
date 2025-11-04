@@ -102,5 +102,9 @@ public class Ball {
             ball.setCenterY(rectBottom + BALL_RADIUS + 1);
         }
     }
+    
+    public void setVelocity(double vx, double vy) {
+        ballVelocity = new Point2D(vx, vy);
+    }
 
 }

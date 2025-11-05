@@ -1,5 +1,6 @@
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -19,6 +20,9 @@ import javafx.scene.text.Font;
 
 public class AnimationController {
 
+	private static final int LEVEL_ROWS = 5;
+	private static final int LEVEL_COLS = 10;
+	
 	private int width;
 	private int height;
 
@@ -26,7 +30,6 @@ public class AnimationController {
 	private Rectangle paddle;
 
 	private Paddle gamePaddle;
-	private List<Brick> bricks;
 	
 	private int score;
 	private int highScore;
@@ -40,6 +43,7 @@ public class AnimationController {
 	private int lives;
 	private Text livesText;
 	private boolean gameOver = false;
+	private BreakoutLevel currentLevel;
 	
 	private List<Ball> extraBalls;       
 	private List<PowerUp> powerUps;     
@@ -57,37 +61,21 @@ public class AnimationController {
 		// create one top level collection to organize the things in the scene
 		Group root = new Group();
 
-		// make some shapes and set their properties
+		// make main ball and paddle
 		gameBall = new Ball(width/2, height/2);
+		gameBall.setMainBall(true);
 		paddle = new Rectangle(100,100);
 
 		gamePaddle = new Paddle(width, height);
 		root.getChildren().add(gameBall.getBall());
 		root.getChildren().add(gamePaddle.getView());
 
-		bricks = new ArrayList<>();
 		extraBalls = new ArrayList<>();
 		powerUps = new ArrayList<>();
-
-		int rows = 5;
-		int cols = 12;
-		int spacing = 3;
-		int brickWidth = 60;
-		int brickHeight = 30;
-		int offsetX = 20;
-		int offsetY = 40;
-
-		for (int row = 0; row < rows; row++) {
-			for (int col = 0; col < cols; col++) {
-				int x = offsetX + col * (brickWidth + spacing);
-				int y = offsetY + row * (brickHeight + spacing);
-				Color color = Color.hsb((row * 60) % 360, 0.8, 0.9);
-				Brick brick = new Brick(x, y, 100, color);
-				bricks.add(brick);
-				root.getChildren().add(brick.getView());
-			}
-		}
-
+		
+		// create game level
+		currentLevel = new BreakoutLevel(LEVEL_ROWS, LEVEL_COLS);
+		currentLevel.createLevel(root);
 		
 		score = 0;
 		highScore = 0;
@@ -166,14 +154,14 @@ public class AnimationController {
 		    }
 		    
 		 // Check collision with bricks
-		    Iterator<Brick> brickIter = bricks.iterator();
+		    Iterator<Brick> brickIter = currentLevel.getBricks().iterator();
 		    while (brickIter.hasNext()) {
 		        Brick brick = brickIter.next();
 		        int earnedPoints = brick.handleHit(b.getBall());
 		        if (earnedPoints > 0) {
+		        	b.objectBounce(brick.getView());
 		            brickIter.remove();
 		            root.getChildren().remove(brick.getView());
-		            b.reverseY();
 		            score += earnedPoints;
 		            if (score > highScore) highScore = score;
 		            updateScoreDisplay();
@@ -187,6 +175,10 @@ public class AnimationController {
 		            }
 
 		            break; // only one brick collision per ball per step
+		        }
+		        // handle obstacle collision
+		        if (earnedPoints == -1) {
+		        	b.objectBounce(brick.getView());
 		        }
 		    }
 
@@ -255,29 +247,13 @@ public class AnimationController {
 	    // remove rectangles of bricks
 	    root.getChildren().removeIf(node -> node instanceof Rectangle && node != gamePaddle.getView());
 	    
-	    // restarts bricks
-	    bricks.clear();
-	    int rows = 5;
-	    int cols = 10;
-	    int spacing = 5;
-	    int brickWidth = 60;
-	    int brickHeight = 20;
-	    int offsetX = 30;
-	    int offsetY = 40;
-	    for (int row = 0; row < rows; row++) {
-	        for (int col = 0; col < cols; col++) {
-	            int x = offsetX + col * (brickWidth + spacing);
-	            int y = offsetY + row * (brickHeight + spacing);
-	            Color color = Color.hsb((row * 60) % 360, 0.8, 0.9);
-	            Brick brick = new Brick(x, y, 100, color);
-	            bricks.add(brick);
-	            root.getChildren().add(brick.getView());
-	        }
-	    }
+	    // create new level
+	    currentLevel.getBricks().clear();
+	    currentLevel.createLevel(root);
 
 	    // reset ball & paddle
-	    gameBall.resetBall(width / 2, height / 2);
-	    gamePaddle.getView().setX((width - 80) / 2.0); // recenter paddle
+	    gameBall.resetBall(width/2, height/2);
+	    gamePaddle.getView().setX((width - 80) / 2.0);
 	}
 	
 	public void moverMovesHorizontally(boolean goLeft, boolean isPressed) {

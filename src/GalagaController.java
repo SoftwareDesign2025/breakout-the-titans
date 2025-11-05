@@ -27,7 +27,7 @@ public class GalagaController extends GameController {
     protected static final int ROWS = 3;
     protected static final int COLUMNS = 8;
 
-    // 🔹 NEW: fire cooldown timer
+    // fire cooldown timer
     private double shootCooldown = 0;
     private static final double SHOOT_DELAY = 0.25; // seconds between shots
 
@@ -38,6 +38,7 @@ public class GalagaController extends GameController {
         root.getChildren().add(player);
 
         bullets = new ArrayList<>();
+        enemies = new ArrayList<>();
         level = new GalagaLevel(ROWS, COLUMNS);
         level.createLevel(root);
         enemies = level.getBugs();
@@ -50,12 +51,12 @@ public class GalagaController extends GameController {
 
         Group root = (Group) livesText.getParent();
 
-        // 🔹 Update shoot cooldown timer
+        // Update shoot cooldown timer
         if (shootCooldown > 0) {
             shootCooldown -= elapsedTime;
         }
 
-        // 🔹 Fire bullet only when cooldown is 0
+        // Fire bullet only when cooldown is 0
         if (shooting && shootCooldown <= 0) {
             Rectangle bullet = new Rectangle(player.getX() + player.getWidth() / 2 - 2, player.getY() - 10, 4, 10);
             bullet.setFill(Color.YELLOW);
@@ -130,6 +131,7 @@ public class GalagaController extends GameController {
         root.getChildren().clear();
         setupUI(root);
         setupGame(root);
+        
         gameOver = false;
     }
 
@@ -161,6 +163,8 @@ public class GalagaController extends GameController {
             setMovement(false, false);
         } else if (code == KeyCode.SPACE) {
             setShooting(false);
+        } else if (code == KeyCode.R) {
+            restartGame(); // allow restart from SPACE when game over (matches prior behavior)
         }
     }
 }

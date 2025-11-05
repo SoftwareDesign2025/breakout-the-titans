@@ -14,15 +14,18 @@ import javafx.scene.input.KeyCode;
 public class GalagaController extends GameController {
 
     private Rectangle player;
-    private List<Rectangle> enemies;
     private List<Rectangle> bullets;
+    private List<Bug> enemies;
     private boolean moveLeft = false;
     private boolean moveRight = false;
     private boolean shooting = false;
+    private GalagaLevel level;
 
     private static final double PLAYER_SPEED = 300;
     private static final double BULLET_SPEED = 400;
     private static final double ENEMY_SPEED = 15;
+    protected static final int ROWS = 3;
+    protected static final int COLUMNS = 8;
 
     @Override
     protected void setupGame(Group root) {
@@ -30,20 +33,10 @@ public class GalagaController extends GameController {
         player.setFill(Color.CYAN);
         root.getChildren().add(player);
 
-        enemies = new ArrayList<>();
         bullets = new ArrayList<>();
-
-        int rows = 3, cols = 8;
-        int spacingX = 60, spacingY = 40;
-        int offsetX = 100, offsetY = 60;
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                Rectangle enemy = new Rectangle(offsetX + col * spacingX, offsetY + row * spacingY, 30, 20);
-                enemy.setFill(Color.RED);
-                enemies.add(enemy);
-                root.getChildren().add(enemy);
-            }
-        }
+        level = new GalagaLevel(ROWS,COLUMNS);
+        level.createLevel(root);
+        enemies = level.getBugs();
     }
 
     @Override
@@ -61,6 +54,7 @@ public class GalagaController extends GameController {
         }
 
         Iterator<Rectangle> bulletIter = bullets.iterator();
+        bulletLoop:
         while (bulletIter.hasNext()) {
             Rectangle b = bulletIter.next();
             b.setY(b.getY() - BULLET_SPEED * elapsedTime);
@@ -68,24 +62,24 @@ public class GalagaController extends GameController {
                 bulletIter.remove();
                 root.getChildren().remove(b);
             } else {
-                Iterator<Rectangle> enemyIter = enemies.iterator();
+                Iterator<Bug> enemyIter = enemies.iterator();
                 while (enemyIter.hasNext()) {
-                    Rectangle e = enemyIter.next();
-                    if (b.getBoundsInParent().intersects(e.getBoundsInParent())) {
+                    Bug e = enemyIter.next();
+                    if (b.getBoundsInParent().intersects(e.getView().getBoundsInParent())) {
+                    	score += e.handleHit();
                         enemyIter.remove();
-                        root.getChildren().remove(e);
+                        root.getChildren().remove(e.getView());
                         bulletIter.remove();
                         root.getChildren().remove(b);
-                        score += 100;
                         if (score > highScore) highScore = score;
                         updateScoreDisplay();
-                        break;
+                        break bulletLoop;
                     }
                 }
             }
         }
 
-        for (Rectangle e : enemies) {
+        for (Bug e : enemies) {
             e.setY(e.getY() + ENEMY_SPEED * elapsedTime);
             if (e.getY() + e.getHeight() >= height - 50 && !gameOver) {
                 lives = 0;

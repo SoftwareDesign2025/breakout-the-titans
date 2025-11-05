@@ -3,14 +3,15 @@ import java.util.List;
 
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 
 public class GalagaLevel extends Level {
 
-	private static final double BRICK_DENSITY = 0.75;
+	private static final double BUG_DENSITY = 0.9;
 	private static final int BUG_WIDTH = 20;
 	private static final int BUG_HEIGHT = 50;
 	
-	private List<Bug> bugs;
+	private List<Bug> enemies;
 	
 	public GalagaLevel(int rows, int cols) {
 		super(rows, cols);
@@ -18,26 +19,23 @@ public class GalagaLevel extends Level {
 
 	@Override
 	public void createLevel(Group root) {
-		bugs = new ArrayList<>();
+		enemies = new ArrayList<>();
 		
-		// randomly chooses positions to place bugs based on their set density
-		for (int row = 0; row < rows; row++) {
-			Bug bug = null;
-			for (int col = 0; col < cols; col++) {
-				if (Math.random() > BRICK_DENSITY) {
-					continue;
-				}
-				int x = OFFSET_X + col * (3 * BUG_WIDTH + SPACING);
-				int y = OFFSET_Y + row * (BUG_HEIGHT + SPACING);
-				Color color = Color.hsb((row * 60) % 360, 0.8, 0.9);
-				//bug = new Bug(x, y, 100, color);
-				bugs.add(bug);
-				//root.getChildren().add(bug.getView());
-			}
-		}
+        int spacingX = 60, spacingY = 40;
+        int offsetX = 100, offsetY = 60;
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+            	if(Math.random() > BUG_DENSITY) {
+            		break;
+            	}
+                Bug enemy = new Bug(offsetX + col * spacingX, offsetY + row * spacingY, 100, Color.RED);
+                enemies.add(enemy);
+                root.getChildren().add(enemy.getView());
+            }
+        }
 	}
 	
 	public List<Bug> getBugs(){
-		return bugs;
+		return enemies;
 	}
 }

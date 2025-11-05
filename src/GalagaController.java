@@ -14,15 +14,22 @@ import javafx.scene.input.KeyCode;
 public class GalagaController extends GameController {
 
     private Rectangle player;
-    private List<Rectangle> enemies;
     private List<Rectangle> bullets;
+    private List<Bug> enemies;
     private boolean moveLeft = false;
     private boolean moveRight = false;
     private boolean shooting = false;
+    private GalagaLevel level;
 
     private static final double PLAYER_SPEED = 300;
     private static final double BULLET_SPEED = 400;
     private static final double ENEMY_SPEED = 15;
+    protected static final int ROWS = 3;
+    protected static final int COLUMNS = 8;
+
+    // 🔹 NEW: fire cooldown timer
+    private double shootCooldown = 0;
+    private static final double SHOOT_DELAY = 0.25; // seconds between shots
 
     @Override
     protected void setupGame(Group root) {
@@ -30,20 +37,10 @@ public class GalagaController extends GameController {
         player.setFill(Color.CYAN);
         root.getChildren().add(player);
 
-        enemies = new ArrayList<>();
         bullets = new ArrayList<>();
-
-        int rows = 3, cols = 8;
-        int spacingX = 60, spacingY = 40;
-        int offsetX = 100, offsetY = 60;
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                Rectangle enemy = new Rectangle(offsetX + col * spacingX, offsetY + row * spacingY, 30, 20);
-                enemy.setFill(Color.RED);
-                enemies.add(enemy);
-                root.getChildren().add(enemy);
-            }
-        }
+        level = new GalagaLevel(ROWS, COLUMNS);
+        level.createLevel(root);
+        enemies = level.getBugs();
     }
 
     @Override
@@ -53,39 +50,65 @@ public class GalagaController extends GameController {
 
         Group root = (Group) livesText.getParent();
 
-        if (shooting && bullets.size() < 5) {
+        // 🔹 Update shoot cooldown timer
+        if (shootCooldown > 0) {
+            shootCooldown -= elapsedTime;
+        }
+
+        // 🔹 Fire bullet only when cooldown is 0
+        if (shooting && shootCooldown <= 0) {
             Rectangle bullet = new Rectangle(player.getX() + player.getWidth() / 2 - 2, player.getY() - 10, 4, 10);
             bullet.setFill(Color.YELLOW);
             bullets.add(bullet);
             root.getChildren().add(bullet);
+            shootCooldown = SHOOT_DELAY; // reset cooldown
         }
 
         Iterator<Rectangle> bulletIter = bullets.iterator();
         while (bulletIter.hasNext()) {
             Rectangle b = bulletIter.next();
             b.setY(b.getY() - BULLET_SPEED * elapsedTime);
+
+            // remove bullet if it leaves screen
             if (b.getY() < 0) {
                 bulletIter.remove();
                 root.getChildren().remove(b);
-            } else {
-                Iterator<Rectangle> enemyIter = enemies.iterator();
-                while (enemyIter.hasNext()) {
-                    Rectangle e = enemyIter.next();
-                    if (b.getBoundsInParent().intersects(e.getBoundsInParent())) {
-                        enemyIter.remove();
-                        root.getChildren().remove(e);
-                        bulletIter.remove();
-                        root.getChildren().remove(b);
-                        score += 100;
-                        if (score > highScore) highScore = score;
-                        updateScoreDisplay();
-                        break;
-                    }
+                continue;
+            }
+
+            boolean hitSomething = false;
+
+            // iterate through Bug objects
+            Iterator<Bug> enemyIter = enemies.iterator();
+            while (enemyIter.hasNext()) {
+                Bug e = enemyIter.next();
+
+                // collision check
+                if (b.getBoundsInParent().intersects(e.getView().getBoundsInParent())) {
+                    // remove bug from scene and list
+                    enemyIter.remove();
+                    root.getChildren().remove(e.getView());
+
+                    // remove bullet from scene and list
+                    bulletIter.remove();
+                    root.getChildren().remove(b);
+
+                    // scoring
+                    score += 100;
+                    if (score > highScore) highScore = score;
+                    updateScoreDisplay();
+
+                    hitSomething = true;
+                    break; // stop checking more enemies for this bullet
                 }
             }
+
+            // no need for a global break; continue to next bullet safely
+            if (hitSomething) continue;
         }
 
-        for (Rectangle e : enemies) {
+        // move enemies downward
+        for (Bug e : enemies) {
             e.setY(e.getY() + ENEMY_SPEED * elapsedTime);
             if (e.getY() + e.getHeight() >= height - 50 && !gameOver) {
                 lives = 0;
@@ -118,7 +141,7 @@ public class GalagaController extends GameController {
     public void setShooting(boolean pressed) {
         shooting = pressed;
     }
-    
+
     @Override
     public void handleKeyInput(KeyCode code) {
         if (code == KeyCode.LEFT) {
@@ -127,9 +150,9 @@ public class GalagaController extends GameController {
             setMovement(false, true);
         } else if (code == KeyCode.SPACE) {
             setShooting(true);
-        } 
+        }
     }
-    
+
     @Override
     public void handleKeyRelease(KeyCode code) {
         if (code == KeyCode.LEFT) {

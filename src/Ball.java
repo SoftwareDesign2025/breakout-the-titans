@@ -12,6 +12,7 @@ public class Ball {
     private int defaultXPosition;
     private int defaultYPosition;
     private Point2D previousPosition;
+    private boolean isMainBall;
     
 	public Ball (int startXPosition, int startYPosition) {
         ball = new Circle(BALL_RADIUS, Color.BLUE);
@@ -31,6 +32,14 @@ public class Ball {
 	
 	public Circle getBall() {
 		return ball;
+	}
+	
+	public boolean isMainBall() {
+		return isMainBall;
+	}
+	
+	public void setMainBall(boolean isMainBall) {
+		isMainBall = true;
 	}
 	
     public void move(double elapsedTime) {

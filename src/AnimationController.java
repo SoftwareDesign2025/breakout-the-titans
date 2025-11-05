@@ -40,6 +40,15 @@ public class AnimationController {
 	private int lives;
 	private Text livesText;
 	private boolean gameOver = false;
+	
+	private List<Ball> extraBalls;       
+	private List<PowerUp> powerUps;     
+	private Paddle extraPaddle;          
+	private double extraPaddleTimer = 0; 
+	
+	private String keyBuffer = ""; // stores recent keys typed
+	private final int MAX_KEY_BUFFER = 10; // max length to avoid unlimited growth
+
 
 	public Group createRootForAnimation(int windowWidth, int windowHeight) {
 		width = windowWidth;
@@ -57,6 +66,8 @@ public class AnimationController {
 		root.getChildren().add(gamePaddle.getView());
 
 		bricks = new ArrayList<>();
+		extraBalls = new ArrayList<>();
+		powerUps = new ArrayList<>();
 
 		int rows = 5;
 		int cols = 12;
@@ -128,29 +139,88 @@ public class AnimationController {
 	public void step (double elapsedTime) {
 		// smooth paddles
 		if (moveLeft)  gamePaddle.moveLeft(elapsedTime);
-	    if (moveRight) gamePaddle.moveRight(elapsedTime);
+		if (moveRight) gamePaddle.moveRight(elapsedTime);
+
+		if (extraPaddle != null) {
+		    if (moveLeft)  extraPaddle.moveLeft(elapsedTime);
+		    if (moveRight) extraPaddle.moveRight(elapsedTime);
+		}
 		// update "actors" attributes
-		gameBall.move(elapsedTime);
-		gameBall.wallBounce(width, height);
-		gameBall.objectBounce(gamePaddle.getView());
+		List<Ball> allBalls = new ArrayList<>();
+		allBalls.add(gameBall);
+		allBalls.addAll(extraBalls);
 
-		// removes brick if contacted by ball 
-		Iterator<Brick> iter = bricks.iterator();
-		while (iter.hasNext()) {
-		    Brick brick = iter.next();
-		    int earnedPoints = brick.handleHit(gameBall.getBall());
-		    if (earnedPoints > 0) {
-		    	gameBall.objectBounce(brick.getView());
-		        iter.remove();
+		Group root = (Group) livesText.getParent();
 
-		        score += earnedPoints;
-		        if (score > highScore) {
-		            highScore = score;
+		Iterator<Ball> ballIter = allBalls.iterator();
+		while (ballIter.hasNext()) {
+		    Ball b = ballIter.next();
+		    
+		    b.move(elapsedTime);
+		    b.wallBounce(width, height);
+		    
+		    // Bounce off main and extra paddle
+		    b.objectBounce(gamePaddle.getView());
+		    if (extraPaddle != null) {
+		        b.objectBounce(extraPaddle.getView());
+		    }
+		    
+		 // Check collision with bricks
+		    Iterator<Brick> brickIter = bricks.iterator();
+		    while (brickIter.hasNext()) {
+		        Brick brick = brickIter.next();
+		        int earnedPoints = brick.handleHit(b.getBall());
+		        if (earnedPoints > 0) {
+		            brickIter.remove();
+		            root.getChildren().remove(brick.getView());
+		            b.reverseY();
+		            score += earnedPoints;
+		            if (score > highScore) highScore = score;
+		            updateScoreDisplay();
+
+		            // Randomly spawn a power-up
+		            if (Math.random() < 0.25) { // 25% chance
+		                PowerUp.Type type = Math.random() < 0.5 ? PowerUp.Type.MULTI_BALL : PowerUp.Type.MULTI_PADDLE;
+		                PowerUp pu = new PowerUp((int)brick.getView().getX(), (int)brick.getView().getY(), type);
+		                powerUps.add(pu);
+		                root.getChildren().add(pu.getView());
+		            }
+
+		            break; // only one brick collision per ball per step
 		        }
-		        updateScoreDisplay();
-		        break;
+		    }
+
+
+		    // Remove ball if it falls off bottom (for extra balls)
+		    if (b.getBall().getCenterY() + Ball.BALL_RADIUS >= height && b != gameBall) {
+		        root.getChildren().remove(b.getBall());
+		        ballIter.remove();
 		    }
 		}
+
+		Iterator<PowerUp> pIter = powerUps.iterator();
+		while (pIter.hasNext()) {
+		    PowerUp pu = pIter.next();
+		    pu.move(elapsedTime);
+		    if (pu.intersects(gamePaddle.getView())) {
+		        activatePowerUp(pu, root);
+		        pIter.remove();
+		        root.getChildren().remove(pu.getView());
+		    } else if (pu.getView().getCenterY() > height) {
+		        pIter.remove();
+		        root.getChildren().remove(pu.getView());
+		    }
+		}
+
+		// handle extra paddle timer
+		if (extraPaddle != null) {
+		    extraPaddleTimer -= elapsedTime;
+		    if (extraPaddleTimer <= 0) {
+		        root.getChildren().remove(extraPaddle.getView());
+		        extraPaddle = null;
+		    }
+		}
+
 		
 		// if ball fell off bottom, lose a life and reset
 		if (gameBall.getBall().getCenterY() + Ball.BALL_RADIUS >= height && !gameOver) {
@@ -181,10 +251,11 @@ public class AnimationController {
 	    // Clear any text
 	    Group root = (Group) livesText.getParent();
 	    root.getChildren().removeIf(node -> node instanceof Text && node != scoreText && node != highScoreText && node != livesText);
+	    
 	    // remove rectangles of bricks
 	    root.getChildren().removeIf(node -> node instanceof Rectangle && node != gamePaddle.getView());
 	    
-	    // restarts brickss
+	    // restarts bricks
 	    bricks.clear();
 	    int rows = 5;
 	    int cols = 10;
@@ -224,4 +295,33 @@ public class AnimationController {
 //		}
 		gamePaddle.getView().setX(x - gamePaddle.getView().getWidth() / 2);
 	}
+	
+	private void activatePowerUp(PowerUp pu, Group root) {
+		if (pu.getType() == PowerUp.Type.MULTI_BALL) {
+		    for (int i = 0; i < 2; i++) {
+		        Ball newBall = new Ball(
+		            (int) gameBall.getBall().getCenterX(),
+		            (int) gameBall.getBall().getCenterY()
+		        );
+
+		        // give the new balls a slightly different random direction and same speed
+		        double angle = Math.random() * 2 * Math.PI;
+		        newBall.setVelocity(Ball.BALL_SPEED * Math.cos(angle), Ball.BALL_SPEED * Math.sin(angle));
+
+		        extraBalls.add(newBall);
+		        root.getChildren().add(newBall.getBall());
+		    }
+		}
+		else if (pu.getType() == PowerUp.Type.MULTI_PADDLE) {
+	        if (extraPaddle == null) {
+	            extraPaddle = new Paddle(width/2, (height));
+	            root.getChildren().add(extraPaddle.getView());
+	            extraPaddleTimer = 10; // lasts 10 seconds
+	        } else {
+	            extraPaddleTimer = 10; // refresh timer if re-collected
+	        }
+	    }
+	}
+	
+	
 }

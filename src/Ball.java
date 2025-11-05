@@ -104,5 +104,9 @@ public class Ball {
         
         // add corner detection
     }
+    
+    public void setVelocity(double vx, double vy) {
+        ballVelocity = new Point2D(vx, vy);
+    }
 
 }

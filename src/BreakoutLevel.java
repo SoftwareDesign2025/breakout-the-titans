@@ -4,6 +4,10 @@ import java.util.List;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 
+/*
+ * @author Colby R
+ */
+
 public class BreakoutLevel extends Level {
 	
 	private static final int BRICK_HEIGHT = 50;

@@ -9,16 +9,8 @@ import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-// Joe was here
-
 /**
- * A basic example JavaFX program for the first lab.
- * 
- * @author Shannon Duvall
- * 
- * This class contains the code that runs the basic window.
- * 
- * Modified to be starting point of the breakout lab
+ * @Author Joe L, Tyler M, Colby R
  * 
  */
 public class Main extends Application {

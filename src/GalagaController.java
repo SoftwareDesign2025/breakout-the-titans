@@ -10,6 +10,8 @@ import javafx.scene.input.KeyCode;
 /*
  * Controller for the Galaga-style game.
  * Uses shared functionality from GameController for score, lives, and text.
+ * 
+ * @author Colby R, Joe L, Tyler M
  */
 public class GalagaController extends GameController {
 
@@ -36,7 +38,7 @@ public class GalagaController extends GameController {
         player = new Rectangle(width / 2 - 15, height - 60, 30, 20);
         player.setFill(Color.CYAN);
         root.getChildren().add(player);
-
+        
         bullets = new ArrayList<>();
         enemies = new ArrayList<>();
         level = new GalagaLevel(ROWS, COLUMNS);

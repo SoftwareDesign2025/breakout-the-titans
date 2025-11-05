@@ -4,6 +4,9 @@ import java.util.List;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+/*
+ * @author Colby R
+ */
 
 public class GalagaLevel extends Level {
 

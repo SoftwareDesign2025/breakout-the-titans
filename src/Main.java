@@ -30,6 +30,7 @@ public class Main extends Application {
 	public static final double SECOND_DELAY = 1.0 / FRAMES_PER_SECOND;
 	public static final String TITLE = "Breakout";
     public static final Paint BACKGROUND = Color.GRAY;
+    private GameController currentController;
 
 
 	private Scene myScene;
@@ -42,21 +43,12 @@ public class Main extends Application {
 	 */
 	@Override
 	public void start (Stage stage) {
-		myAnimation = new AnimationController();
-		// attach scene to the stage and display it
-		myScene = setupScene(WIDTH, HEIGHT, BACKGROUND);
-		stage.setScene(myScene);
-		stage.setTitle(TITLE);
-		stage.show();
-		// attach "game loop" to timeline to play it (basically just calling step() method repeatedly forever)
-		KeyFrame frame = new KeyFrame(Duration.millis(MILLISECOND_DELAY), e -> step(SECOND_DELAY));
-		Timeline animation = new Timeline();
-		animation.setCycleCount(Timeline.INDEFINITE);
-		animation.getKeyFrames().add(frame);
-		animation.play();
+		showStartMenu(stage);	
 	}
 
+	
 	// Create the "scene": what shapes will be drawn and their starting properties
+	/*
 	private Scene setupScene (int width, int height, Paint background) {
 		Group root = myAnimation.createRootForAnimation(WIDTH, HEIGHT);
 		// create a place to see the shapes
@@ -82,23 +74,93 @@ public class Main extends Application {
 		});
 		return scene;
 	}
+	*/
 
 	// This is the method that gets called over and over and over...
 	// every 15 milliseconds or so!
+	/*
 	private void step (double elapsedTime) {
 		myAnimation.step(elapsedTime);
 	}
+	*/
 
 	// What to do each time a key is pressed
 	private void handleMouseInput (double x, double y) {
 		myAnimation.handleMouseInput(x, y);
 	}
 
-	/**
+	/*
 	 * Start the program.
 	 */
 	public static void main (String[] args) {
 		launch(args);
+	}
+	
+	private void setupAndRunGame(Stage stage, GameController controller) {
+	    Group root = controller.createRootForAnimation(WIDTH, HEIGHT);
+	    Scene scene = new Scene(root, WIDTH, HEIGHT, BACKGROUND);
+
+	    scene.setOnKeyPressed(e -> controller.handleKeyInput(e.getCode()));
+	    scene.setOnKeyReleased(e -> controller.handleKeyRelease(e.getCode()));
+
+	    stage.setScene(scene);
+	    stage.setTitle(TITLE);
+	    stage.show();
+
+	    controller.startAnimation();
+	
+
+	    // Run the animation loop
+	    KeyFrame frame = new KeyFrame(Duration.millis(MILLISECOND_DELAY),
+	        e -> currentController.step(SECOND_DELAY));
+	    Timeline animation = new Timeline();
+	    animation.setCycleCount(Timeline.INDEFINITE);
+	    animation.getKeyFrames().add(frame);
+	    animation.play();
+
+	    stage.setScene(scene);
+	}
+	
+	private void startBreakout(Stage stage) {
+	    currentController = new AnimationController();
+	    setupAndRunGame(stage, currentController);
+	}
+
+	private void startGalaga(Stage stage) {
+	    currentController = new GalagaController();
+	    setupAndRunGame(stage, currentController);
+	}
+	
+	
+	
+	private void showStartMenu(Stage stage) {
+	    Group menuRoot = new Group();
+	    Scene menuScene = new Scene(menuRoot, WIDTH, HEIGHT, Color.BLACK);
+
+	    javafx.scene.text.Text title = new javafx.scene.text.Text(WIDTH / 2.0 - 180, HEIGHT / 2.0 - 100, "Choose Your Game");
+	    title.setFill(Color.CYAN);
+	    title.setFont(javafx.scene.text.Font.font(36));
+
+	    javafx.scene.text.Text breakoutOption = new javafx.scene.text.Text(WIDTH / 2.0 - 120, HEIGHT / 2.0, "Press B for Breakout");
+	    breakoutOption.setFill(Color.WHITE);
+	    breakoutOption.setFont(javafx.scene.text.Font.font(24));
+
+	    javafx.scene.text.Text galagaOption = new javafx.scene.text.Text(WIDTH / 2.0 - 120, HEIGHT / 2.0 + 50, "Press G for Galaga");
+	    galagaOption.setFill(Color.WHITE);
+	    galagaOption.setFont(javafx.scene.text.Font.font(24));
+
+	    menuRoot.getChildren().addAll(title, breakoutOption, galagaOption);
+
+	    menuScene.setOnKeyPressed(e -> {
+	        if (e.getCode() == KeyCode.B) {
+	            startBreakout(stage);
+	        } else if (e.getCode() == KeyCode.G) {
+	            startGalaga(stage);
+	        }
+	    });
+
+	    stage.setScene(menuScene);
+	    stage.show();
 	}
 }
 

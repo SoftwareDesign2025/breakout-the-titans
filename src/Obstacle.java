@@ -10,7 +10,7 @@ public class Obstacle extends Brick {
 	
 	@Override
 	public int handleHit(Circle ball) {
-	    return getPointValue();
+	    return -1;
 	}
 	
 }

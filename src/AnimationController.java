@@ -8,6 +8,9 @@ import java.util.List;
 import javafx.scene.text.Text;
 import javafx.scene.text.Font;
 
+import javafx.scene.input.KeyCode;
+
+
 /**
  * 
  * @author Shannon Duvall
@@ -18,286 +21,206 @@ import javafx.scene.text.Font;
  * modified to be starting point of breakout lab
  */
 
-public class AnimationController {
+public class AnimationController extends GameController {
 
-	private static final int LEVEL_ROWS = 5;
-	private static final int LEVEL_COLS = 10;
-	
-	private int width;
-	private int height;
+    private Ball gameBall;
+    private Paddle gamePaddle;
+    private List<Brick> bricks;
 
-	private Ball gameBall;
-	private Rectangle paddle;
+    private boolean moveLeft = false;
+    private boolean moveRight = false;
 
-	private Paddle gamePaddle;
-	
-	private int score;
-	private int highScore;
-	private Text scoreText;
-	private Text highScoreText;
-	
-	private boolean moveLeft = false;
-	private boolean moveRight = false;
-	
-	// for live and level control
-	private int lives;
-	private Text livesText;
-	private boolean gameOver = false;
-	private BreakoutLevel currentLevel;
-	
-	private List<Ball> extraBalls;       
-	private List<PowerUp> powerUps;     
-	private Paddle extraPaddle;          
-	private double extraPaddleTimer = 0; 
-	
-	private String keyBuffer = ""; // stores recent keys typed
-	private final int MAX_KEY_BUFFER = 10; // max length to avoid unlimited growth
+    private List<Ball> extraBalls;       
+    private List<PowerUp> powerUps;     
+    private Paddle extraPaddle;          
+    private double extraPaddleTimer = 0; 
+    
+    
+    
+    protected void setupGame(Group root) {
+        gameBall = new Ball(width / 2, height / 2);
+        gamePaddle = new Paddle(width, height);
+        root.getChildren().addAll(gameBall.getBall(), gamePaddle.getView());
 
+        bricks = new ArrayList<>();
+        extraBalls = new ArrayList<>();
+        powerUps = new ArrayList<>();
 
-	public Group createRootForAnimation(int windowWidth, int windowHeight) {
-		width = windowWidth;
-		height = windowHeight;
+        int rows = 5, cols = 12, spacing = 3, brickWidth = 60, brickHeight = 30, offsetX = 20, offsetY = 40;
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                int x = offsetX + col * (brickWidth + spacing);
+                int y = offsetY + row * (brickHeight + spacing);
+                Color color = Color.hsb((row * 60) % 360, 0.8, 0.9);
+                Brick brick = new Brick(x, y, 100, color);
+                bricks.add(brick);
+                root.getChildren().add(brick.getView());
+            }
+        }
+    }
 
-		// create one top level collection to organize the things in the scene
-		Group root = new Group();
+    @Override
+    public void step(double elapsedTime) {
+        if (moveLeft) gamePaddle.moveLeft(elapsedTime);
+        if (moveRight) gamePaddle.moveRight(elapsedTime);
+        if (extraPaddle != null) {
+            if (moveLeft) extraPaddle.moveLeft(elapsedTime);
+            if (moveRight) extraPaddle.moveRight(elapsedTime);
+        }
 
-		// make main ball and paddle
-		gameBall = new Ball(width/2, height/2);
-		gameBall.setMainBall(true);
-		paddle = new Rectangle(100,100);
+        List<Ball> allBalls = new ArrayList<>();
+        allBalls.add(gameBall);
+        allBalls.addAll(extraBalls);
 
-		gamePaddle = new Paddle(width, height);
-		root.getChildren().add(gameBall.getBall());
-		root.getChildren().add(gamePaddle.getView());
+        Group root = (Group) livesText.getParent();
+        Iterator<Ball> ballIter = allBalls.iterator();
 
-		extraBalls = new ArrayList<>();
-		powerUps = new ArrayList<>();
-		
-		// create game level
-		currentLevel = new BreakoutLevel(LEVEL_ROWS, LEVEL_COLS);
-		currentLevel.createLevel(root);
-		
-		score = 0;
-		highScore = 0;
-		
-		lives = 3; // starting number of lives
-		livesText = new Text(width / 2.0 - 30, height - 10, "Lives: " + lives);
-		livesText.setFill(Color.WHITE);
-		livesText.setFont(Font.font(16));
+        while (ballIter.hasNext()) {
+            Ball b = ballIter.next();
+            b.move(elapsedTime);
+            b.wallBounce(width, height);
+            b.objectBounce(gamePaddle.getView());
+            if (extraPaddle != null) b.objectBounce(extraPaddle.getView());
 
-		root.getChildren().add(livesText);
+            Iterator<Brick> brickIter = bricks.iterator();
+            while (brickIter.hasNext()) {
+                Brick brick = brickIter.next();
+                int earnedPoints = brick.handleHit(b.getBall());
+                if (earnedPoints > 0) {
+                    brickIter.remove();
+                    root.getChildren().remove(brick.getView());
+                    b.reverseY();
+                    score += earnedPoints;
+                    if (score > highScore) highScore = score;
+                    updateScoreDisplay();
+                    if (Math.random() < 0.25) {
+                        PowerUp.Type type = Math.random() < 0.5 ? PowerUp.Type.MULTI_BALL : PowerUp.Type.MULTI_PADDLE;
+                        PowerUp pu = new PowerUp((int) brick.getView().getX(), (int) brick.getView().getY(), type);
+                        powerUps.add(pu);
+                        root.getChildren().add(pu.getView());
+                    }
+                    break;
+                }
+            }
 
-		scoreText = new Text(10, height - 10, "Score: " + score);
-		scoreText.setFill(Color.WHITE);
-		scoreText.setFont(Font.font(16));
+            if (b.getBall().getCenterY() + Ball.BALL_RADIUS >= height && b != gameBall) {
+                root.getChildren().remove(b.getBall());
+                ballIter.remove();
+            }
+        }
 
-		highScoreText = new Text(width - 150, height - 10, "High Score: " + highScore);
-		highScoreText.setFill(Color.WHITE);
-		highScoreText.setFont(Font.font(16));
+        Iterator<PowerUp> pIter = powerUps.iterator();
+        while (pIter.hasNext()) {
+            PowerUp pu = pIter.next();
+            pu.move(elapsedTime);
+            if (pu.intersects(gamePaddle.getView())) {
+                activatePowerUp(pu, root);
+                pIter.remove();
+                root.getChildren().remove(pu.getView());
+            } else if (pu.getView().getCenterY() > height) {
+                pIter.remove();
+                root.getChildren().remove(pu.getView());
+            }
+        }
 
-		root.getChildren().addAll(scoreText, highScoreText);
-		
-		return root;
-	}
-	
-	private void updateScoreDisplay() {
-	    scoreText.setText("Score: " + score);
-	    highScoreText.setText("High Score: " + highScore);
-	}
-	
-	private void updateLivesDisplay() {
-	    livesText.setText("Lives: " + lives);
-	}
+        if (extraPaddle != null) {
+            extraPaddleTimer -= elapsedTime;
+            if (extraPaddleTimer <= 0) {
+                root.getChildren().remove(extraPaddle.getView());
+                extraPaddle = null;
+            }
+        }
 
-	private void endGame(boolean playerWon) {
-	    gameOver = true;
-	    Text endText = new Text(width / 2.0 - 60, height / 2.0, 
-	            playerWon ? "YOU WIN!" : "GAME OVER");
-	    endText.setFill(Color.YELLOW);
-	    endText.setFont(Font.font(24));
+        if (gameBall.getBall().getCenterY() + Ball.BALL_RADIUS >= height && !gameOver) {
+            lives--;
+            updateLivesDisplay();
+            if (lives <= 0) {
+                endGame(root, false);
+            } else {
+                gameBall.resetBall(width / 2, height / 2);
+            }
+        }
+    }
 
-	    Text restartText = new Text(width / 2.0 - 90, height / 2.0 + 30, "Press SPACE to restart");
-	    restartText.setFill(Color.WHITE);
-	    restartText.setFont(Font.font(16));
+    @Override
+    public void restartGame() {
+        if (!gameOver) return;
 
-	    Group root = (Group) livesText.getParent();
-	    root.getChildren().addAll(endText, restartText);
-	}
+        gameOver = false;
+        lives = 3;
+        score = 0;
+        updateScoreDisplay();
+        updateLivesDisplay();
 
-	public void step (double elapsedTime) {
-		// smooth paddles
-		if (moveLeft)  gamePaddle.moveLeft(elapsedTime);
-		if (moveRight) gamePaddle.moveRight(elapsedTime);
+        Group root = (Group) livesText.getParent();
+        root.getChildren().removeIf(node -> node instanceof Text && node != scoreText && node != highScoreText && node != livesText);
+        root.getChildren().removeIf(node -> node instanceof Rectangle && node != gamePaddle.getView());
 
-		if (extraPaddle != null) {
-		    if (moveLeft)  extraPaddle.moveLeft(elapsedTime);
-		    if (moveRight) extraPaddle.moveRight(elapsedTime);
-		}
-		// update "actors" attributes
-		List<Ball> allBalls = new ArrayList<>();
-		allBalls.add(gameBall);
-		allBalls.addAll(extraBalls);
+        bricks.clear();
+        int rows = 5, cols = 10, spacing = 5, brickWidth = 60, brickHeight = 20, offsetX = 30, offsetY = 40;
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                int x = offsetX + col * (brickWidth + spacing);
+                int y = offsetY + row * (brickHeight + spacing);
+                Color color = Color.hsb((row * 60) % 360, 0.8, 0.9);
+                Brick brick = new Brick(x, y, 100, color);
+                bricks.add(brick);
+                root.getChildren().add(brick.getView());
+            }
+        }
 
-		Group root = (Group) livesText.getParent();
+        gameBall.resetBall(width / 2, height / 2);
+        gamePaddle.getView().setX((width - 80) / 2.0);
+    }
 
-		Iterator<Ball> ballIter = allBalls.iterator();
-		while (ballIter.hasNext()) {
-		    Ball b = ballIter.next();
-		    
-		    b.move(elapsedTime);
-		    b.wallBounce(width, height);
-		    
-		    // Bounce off main and extra paddle
-		    b.objectBounce(gamePaddle.getView());
-		    if (extraPaddle != null) {
-		        b.objectBounce(extraPaddle.getView());
-		    }
-		    
-		 // Check collision with bricks
-		    Iterator<Brick> brickIter = currentLevel.getBricks().iterator();
-		    while (brickIter.hasNext()) {
-		        Brick brick = brickIter.next();
-		        int earnedPoints = brick.handleHit(b.getBall());
-		        if (earnedPoints > 0) {
-		        	b.objectBounce(brick.getView());
-		            brickIter.remove();
-		            root.getChildren().remove(brick.getView());
-		            score += earnedPoints;
-		            if (score > highScore) highScore = score;
-		            updateScoreDisplay();
+    public void moverMovesHorizontally(boolean goLeft, boolean isPressed) {
+        if (goLeft) moveLeft = isPressed;
+        else moveRight = isPressed;
+    }
 
-		            // Randomly spawn a power-up
-		            if (Math.random() < 0.25) { // 25% chance
-		                PowerUp.Type type = Math.random() < 0.5 ? PowerUp.Type.MULTI_BALL : PowerUp.Type.MULTI_PADDLE;
-		                PowerUp pu = new PowerUp((int)brick.getView().getX(), (int)brick.getView().getY(), type);
-		                powerUps.add(pu);
-		                root.getChildren().add(pu.getView());
-		            }
+    public void handleMouseInput(double x, double y) {
+        gamePaddle.getView().setX(x - gamePaddle.getView().getWidth() / 2);
+    }
 
-		            break; // only one brick collision per ball per step
-		        }
-		        // handle obstacle collision
-		        if (earnedPoints == -1) {
-		        	b.objectBounce(brick.getView());
-		        }
-		    }
-
-
-		    // Remove ball if it falls off bottom (for extra balls)
-		    if (b.getBall().getCenterY() + Ball.BALL_RADIUS >= height && b != gameBall) {
-		        root.getChildren().remove(b.getBall());
-		        ballIter.remove();
-		    }
-		}
-
-		Iterator<PowerUp> pIter = powerUps.iterator();
-		while (pIter.hasNext()) {
-		    PowerUp pu = pIter.next();
-		    pu.move(elapsedTime);
-		    if (pu.intersects(gamePaddle.getView())) {
-		        activatePowerUp(pu, root);
-		        pIter.remove();
-		        root.getChildren().remove(pu.getView());
-		    } else if (pu.getView().getCenterY() > height) {
-		        pIter.remove();
-		        root.getChildren().remove(pu.getView());
-		    }
-		}
-
-		// handle extra paddle timer
-		if (extraPaddle != null) {
-		    extraPaddleTimer -= elapsedTime;
-		    if (extraPaddleTimer <= 0) {
-		        root.getChildren().remove(extraPaddle.getView());
-		        extraPaddle = null;
-		    }
-		}
-
-		
-		// if ball fell off bottom, lose a life and reset
-		if (gameBall.getBall().getCenterY() + Ball.BALL_RADIUS >= height && !gameOver) {
-		    lives--;
-		    updateLivesDisplay();
-
-		    if (lives <= 0) {
-		        endGame(false);
-		    } else {
-		        // reset ball to center
-		        gameBall.resetBall(width / 2, height / 2);
-		    }
-		}
-		
-	}
-	
-	public void restartGame() {
-	    // restart if game is over
-	    if (!gameOver) return;
-
-	    // reset
-	    gameOver = false;
-	    lives = 3;
-	    score = 0;
-	    updateScoreDisplay();
-	    updateLivesDisplay();
-
-	    // Clear any text
-	    Group root = (Group) livesText.getParent();
-	    root.getChildren().removeIf(node -> node instanceof Text && node != scoreText && node != highScoreText && node != livesText);
-	    
-	    // remove rectangles of bricks
-	    root.getChildren().removeIf(node -> node instanceof Rectangle && node != gamePaddle.getView());
-	    
-	    // create new level
-	    currentLevel.getBricks().clear();
-	    currentLevel.createLevel(root);
-
-	    // reset ball & paddle
-	    gameBall.resetBall(width/2, height/2);
-	    gamePaddle.getView().setX((width - 80) / 2.0);
-	}
-	
-	public void moverMovesHorizontally(boolean goLeft, boolean isPressed) {
-	    if (goLeft) {
-	        moveLeft = isPressed;
-	    } else {
-	        moveRight = isPressed;
-	    }
-	}
-
-
-	public void handleMouseInput (double x, double y) {
-//		if (myGrower.contains(x, y)) {
-//
-//		}
-		gamePaddle.getView().setX(x - gamePaddle.getView().getWidth() / 2);
-	}
-	
-	private void activatePowerUp(PowerUp pu, Group root) {
-		if (pu.getType() == PowerUp.Type.MULTI_BALL) {
-		    for (int i = 0; i < 2; i++) {
-		        Ball newBall = new Ball(
-		            (int) gameBall.getBall().getCenterX(),
-		            (int) gameBall.getBall().getCenterY()
-		        );
-
-		        // give the new balls a slightly different random direction and same speed
-		        double angle = Math.random() * 2 * Math.PI;
-		        newBall.setVelocity(Ball.BALL_SPEED * Math.cos(angle), Ball.BALL_SPEED * Math.sin(angle));
-
-		        extraBalls.add(newBall);
-		        root.getChildren().add(newBall.getBall());
-		    }
-		}
-		else if (pu.getType() == PowerUp.Type.MULTI_PADDLE) {
-	        if (extraPaddle == null) {
-	            extraPaddle = new Paddle(width/2, (height));
-	            root.getChildren().add(extraPaddle.getView());
-	            extraPaddleTimer = 10; // lasts 10 seconds
-	        } else {
-	            extraPaddleTimer = 10; // refresh timer if re-collected
-	        }
-	    }
-	}
-	
-	
+    private void activatePowerUp(PowerUp pu, Group root) {
+        if (pu.getType() == PowerUp.Type.MULTI_BALL) {
+            for (int i = 0; i < 2; i++) {
+                Ball newBall = new Ball(
+                    (int) gameBall.getBall().getCenterX(),
+                    (int) gameBall.getBall().getCenterY()
+                );
+                double angle = Math.random() * 2 * Math.PI;
+                newBall.setVelocity(Ball.BALL_SPEED * Math.cos(angle), Ball.BALL_SPEED * Math.sin(angle));
+                extraBalls.add(newBall);
+                root.getChildren().add(newBall.getBall());
+            }
+        } else if (pu.getType() == PowerUp.Type.MULTI_PADDLE) {
+            if (extraPaddle == null) {
+                extraPaddle = new Paddle(width / 2, height);
+                root.getChildren().add(extraPaddle.getView());
+                extraPaddleTimer = 10;
+            } else {
+                extraPaddleTimer = 10;
+            }
+        }
+    }
+    
+    @Override
+    public void handleKeyInput(KeyCode code) {
+        if (code == KeyCode.LEFT) {
+            moverMovesHorizontally(true, true);
+        } else if (code == KeyCode.RIGHT) {
+            moverMovesHorizontally(false, true);
+        } else if (code == KeyCode.SPACE) {
+            restartGame(); // allow restart from SPACE when game over (matches prior behavior)
+        }
+    }
+    
+    public void handleKeyRelease(KeyCode code) {
+        if (code == KeyCode.LEFT) {
+            moverMovesHorizontally(true, false);
+        } else if (code == KeyCode.RIGHT) {
+            moverMovesHorizontally(false, false);
+        }
+    }
 }

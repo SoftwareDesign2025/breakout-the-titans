@@ -26,6 +26,7 @@ public class AnimationController extends GameController {
     private Ball gameBall;
     private Paddle gamePaddle;
     private List<Brick> bricks;
+    private BreakoutLevel level;
 
     private boolean moveLeft = false;
     private boolean moveRight = false;
@@ -34,6 +35,9 @@ public class AnimationController extends GameController {
     private List<PowerUp> powerUps;     
     private Paddle extraPaddle;          
     private double extraPaddleTimer = 0; 
+    
+    protected static final int ROWS = 5;
+    protected static final int COLUMNS = 10;
     
     
     
@@ -46,17 +50,9 @@ public class AnimationController extends GameController {
         extraBalls = new ArrayList<>();
         powerUps = new ArrayList<>();
 
-        int rows = 5, cols = 12, spacing = 3, brickWidth = 60, brickHeight = 30, offsetX = 20, offsetY = 40;
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                int x = offsetX + col * (brickWidth + spacing);
-                int y = offsetY + row * (brickHeight + spacing);
-                Color color = Color.hsb((row * 60) % 360, 0.8, 0.9);
-                Brick brick = new Brick(x, y, 100, color);
-                bricks.add(brick);
-                root.getChildren().add(brick.getView());
-            }
-        }
+        level = new BreakoutLevel(ROWS, COLUMNS);
+        level.createLevel(root);
+        bricks = level.getBricks();
     }
 
     @Override
@@ -157,17 +153,9 @@ public class AnimationController extends GameController {
         root.getChildren().removeIf(node -> node instanceof Rectangle && node != gamePaddle.getView());
 
         bricks.clear();
-        int rows = 5, cols = 10, spacing = 5, brickWidth = 60, brickHeight = 20, offsetX = 30, offsetY = 40;
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                int x = offsetX + col * (brickWidth + spacing);
-                int y = offsetY + row * (brickHeight + spacing);
-                Color color = Color.hsb((row * 60) % 360, 0.8, 0.9);
-                Brick brick = new Brick(x, y, 100, color);
-                bricks.add(brick);
-                root.getChildren().add(brick.getView());
-            }
-        }
+        level = new BreakoutLevel(ROWS, COLUMNS);
+        level.createLevel(root);
+        bricks = level.getBricks();
 
         gameBall.resetBall(width / 2, height / 2);
         gamePaddle.getView().setX((width - 80) / 2.0);

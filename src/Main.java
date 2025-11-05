@@ -46,44 +46,6 @@ public class Main extends Application {
 		showStartMenu(stage);	
 	}
 
-	
-	// Create the "scene": what shapes will be drawn and their starting properties
-	/*
-	private Scene setupScene (int width, int height, Paint background) {
-		Group root = myAnimation.createRootForAnimation(WIDTH, HEIGHT);
-		// create a place to see the shapes
-		Scene scene = new Scene(root, width, height, background);
-		// respond to input (smooth implemented - replaced handlekeyinput)
-		scene.setOnKeyPressed(e -> {
-		    if (e.getCode() == KeyCode.LEFT) {
-		        myAnimation.moverMovesHorizontally(true, true);
-		    } else if (e.getCode() == KeyCode.RIGHT) {
-		        myAnimation.moverMovesHorizontally(false, true);
-		    } else if (e.getCode() == KeyCode.SPACE) {
-		        myAnimation.restartGame();
-		    }
-		    
-		});
-
-		scene.setOnKeyReleased(e -> {
-		    if (e.getCode() == KeyCode.LEFT) {
-		        myAnimation.moverMovesHorizontally(true, false);
-		    } else if (e.getCode() == KeyCode.RIGHT) {
-		        myAnimation.moverMovesHorizontally(false, false);
-		    }
-		});
-		return scene;
-	}
-	*/
-
-	// This is the method that gets called over and over and over...
-	// every 15 milliseconds or so!
-	/*
-	private void step (double elapsedTime) {
-		myAnimation.step(elapsedTime);
-	}
-	*/
-
 	// What to do each time a key is pressed
 	private void handleMouseInput (double x, double y) {
 		myAnimation.handleMouseInput(x, y);

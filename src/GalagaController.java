@@ -27,6 +27,10 @@ public class GalagaController extends GameController {
     protected static final int ROWS = 3;
     protected static final int COLUMNS = 8;
 
+    // 🔹 NEW: fire cooldown timer
+    private double shootCooldown = 0;
+    private static final double SHOOT_DELAY = 0.25; // seconds between shots
+
     @Override
     protected void setupGame(Group root) {
         player = new Rectangle(width / 2 - 15, height - 60, 30, 20);
@@ -34,7 +38,7 @@ public class GalagaController extends GameController {
         root.getChildren().add(player);
 
         bullets = new ArrayList<>();
-        level = new GalagaLevel(ROWS,COLUMNS);
+        level = new GalagaLevel(ROWS, COLUMNS);
         level.createLevel(root);
         enemies = level.getBugs();
     }
@@ -46,39 +50,64 @@ public class GalagaController extends GameController {
 
         Group root = (Group) livesText.getParent();
 
-        if (shooting && bullets.size() < 5) {
+        // 🔹 Update shoot cooldown timer
+        if (shootCooldown > 0) {
+            shootCooldown -= elapsedTime;
+        }
+
+        // 🔹 Fire bullet only when cooldown is 0
+        if (shooting && shootCooldown <= 0) {
             Rectangle bullet = new Rectangle(player.getX() + player.getWidth() / 2 - 2, player.getY() - 10, 4, 10);
             bullet.setFill(Color.YELLOW);
             bullets.add(bullet);
             root.getChildren().add(bullet);
+            shootCooldown = SHOOT_DELAY; // reset cooldown
         }
 
         Iterator<Rectangle> bulletIter = bullets.iterator();
-        bulletLoop:
         while (bulletIter.hasNext()) {
             Rectangle b = bulletIter.next();
             b.setY(b.getY() - BULLET_SPEED * elapsedTime);
+
+            // remove bullet if it leaves screen
             if (b.getY() < 0) {
                 bulletIter.remove();
                 root.getChildren().remove(b);
-            } else {
-                Iterator<Bug> enemyIter = enemies.iterator();
-                while (enemyIter.hasNext()) {
-                    Bug e = enemyIter.next();
-                    if (b.getBoundsInParent().intersects(e.getView().getBoundsInParent())) {
-                    	score += e.handleHit();
-                        enemyIter.remove();
-                        root.getChildren().remove(e.getView());
-                        bulletIter.remove();
-                        root.getChildren().remove(b);
-                        if (score > highScore) highScore = score;
-                        updateScoreDisplay();
-                        break bulletLoop;
-                    }
+                continue;
+            }
+
+            boolean hitSomething = false;
+
+            // iterate through Bug objects
+            Iterator<Bug> enemyIter = enemies.iterator();
+            while (enemyIter.hasNext()) {
+                Bug e = enemyIter.next();
+
+                // collision check
+                if (b.getBoundsInParent().intersects(e.getView().getBoundsInParent())) {
+                    // remove bug from scene and list
+                    enemyIter.remove();
+                    root.getChildren().remove(e.getView());
+
+                    // remove bullet from scene and list
+                    bulletIter.remove();
+                    root.getChildren().remove(b);
+
+                    // scoring
+                    score += 100;
+                    if (score > highScore) highScore = score;
+                    updateScoreDisplay();
+
+                    hitSomething = true;
+                    break; // stop checking more enemies for this bullet
                 }
             }
+
+            // no need for a global break; continue to next bullet safely
+            if (hitSomething) continue;
         }
 
+        // move enemies downward
         for (Bug e : enemies) {
             e.setY(e.getY() + ENEMY_SPEED * elapsedTime);
             if (e.getY() + e.getHeight() >= height - 50 && !gameOver) {
@@ -112,7 +141,7 @@ public class GalagaController extends GameController {
     public void setShooting(boolean pressed) {
         shooting = pressed;
     }
-    
+
     @Override
     public void handleKeyInput(KeyCode code) {
         if (code == KeyCode.LEFT) {
@@ -121,9 +150,9 @@ public class GalagaController extends GameController {
             setMovement(false, true);
         } else if (code == KeyCode.SPACE) {
             setShooting(true);
-        } 
+        }
     }
-    
+
     @Override
     public void handleKeyRelease(KeyCode code) {
         if (code == KeyCode.LEFT) {

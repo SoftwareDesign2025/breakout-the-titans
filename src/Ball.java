@@ -3,21 +3,21 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
+/*
+ * @author Colby R
+ * 
+ * game ball for Breakout game
+ */
 public class Ball {
 	public static final int BALL_RADIUS = 10;
     public static final int BALL_SPEED = 150;
 
     private Circle ball;
     private Point2D ballVelocity;
-    private int defaultXPosition;
-    private int defaultYPosition;
     private Point2D previousPosition;
-    private boolean isMainBall;
     
 	public Ball (int startXPosition, int startYPosition) {
         ball = new Circle(BALL_RADIUS, Color.BLUE);
-        defaultXPosition = startXPosition;
-        defaultYPosition = startYPosition;
         resetBall(startXPosition, startYPosition);
 	}
 	
@@ -32,14 +32,6 @@ public class Ball {
 	
 	public Circle getBall() {
 		return ball;
-	}
-	
-	public boolean isMainBall() {
-		return isMainBall;
-	}
-	
-	public void setMainBall(boolean isMainBall) {
-		isMainBall = true;
 	}
 	
     public void move(double elapsedTime) {

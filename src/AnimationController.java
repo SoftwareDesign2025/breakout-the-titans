@@ -11,14 +11,11 @@ import javafx.scene.text.Font;
 import javafx.scene.input.KeyCode;
 
 
-/**
+/*
+ * Controller for the Breakout-style game.
+ * Uses shared functionality from GameController for score, lives, and text.
  * 
  * @author Colby R, Joe L, Tyler M
- * 
- * This program animates two squares.  The top is the "mover" and 
- * the bottom is the "grower".
- * 
- * modified to be starting point of breakout lab
  */
 
 public class AnimationController extends GameController {
@@ -40,7 +37,7 @@ public class AnimationController extends GameController {
     protected static final int COLUMNS = 10;
     
     
-    
+    // creates game and adds to root
     protected void setupGame(Group root) {
         gameBall = new Ball(width / 2, height / 2);
         gamePaddle = new Paddle(width, height);
@@ -55,6 +52,7 @@ public class AnimationController extends GameController {
         bricks = level.getBricks();
     }
 
+    // perform game actions each frame
     @Override
     public void step(double elapsedTime) {
         if (moveLeft) gamePaddle.moveLeft(elapsedTime);
@@ -138,6 +136,7 @@ public class AnimationController extends GameController {
         }
     }
 
+    // resets game with a new, different level
     @Override
     public void restartGame() {
         if (!gameOver) return;

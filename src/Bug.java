@@ -4,6 +4,8 @@ import javafx.scene.shape.Rectangle;
 
 /*
  * @author Colby R
+ * 
+ * Enemy bug object in Galaga
  */
 
 public class Bug extends Brick {
@@ -17,7 +19,7 @@ public class Bug extends Brick {
 		this.y = (double)y;
 	}
 	
-	
+	// handles collision with projectile
 	public int handleHit() {
 	    getView().setVisible(false);
 	    return getPointValue();

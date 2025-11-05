@@ -6,6 +6,8 @@ import javafx.scene.paint.Color;
 
 /*
  * @author Colby R
+ * 
+ * A level of Breakout, with rows and columns of bricks and obstacles
  */
 
 public class BreakoutLevel extends Level {
@@ -21,6 +23,7 @@ public class BreakoutLevel extends Level {
 		super(rows, cols);
 	}
 
+	// creates array of bricks and obstacles and adds to root
 	@Override
 	public void createLevel(Group root) {
 		bricks = new ArrayList<>();

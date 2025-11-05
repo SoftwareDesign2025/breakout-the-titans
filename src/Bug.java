@@ -2,6 +2,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
+/*
+ * @author Colby R
+ */
+
 public class Bug extends Brick {
 	private static final int WIDTH = 50;
 	private static final int HEIGHT = 20;

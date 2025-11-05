@@ -13,7 +13,7 @@ import javafx.scene.input.KeyCode;
 
 /**
  * 
- * @author Shannon Duvall
+ * @author Colby R, Joe L, Tyler M
  * 
  * This program animates two squares.  The top is the "mover" and 
  * the bottom is the "grower".

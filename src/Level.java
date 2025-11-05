@@ -1,5 +1,9 @@
 import javafx.scene.Group;
 
+/*
+ * @author Colby R
+ */
+
 public abstract class Level {
 	
 	protected static final int SPACING = 3;

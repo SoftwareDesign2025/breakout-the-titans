@@ -96,7 +96,7 @@ public abstract class GameController {
         endText.setFill(Color.YELLOW);
         endText.setFont(Font.font(24));
 
-        Text restartText = new Text(width / 2.0 - 90, height / 2.0 + 30, "Press SPACE to restart");
+        Text restartText = new Text(width / 2.0 - 90, height / 2.0 + 30, "Press R to restart");
         restartText.setFill(Color.WHITE);
         restartText.setFont(Font.font(16));
 

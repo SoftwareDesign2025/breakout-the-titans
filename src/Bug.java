@@ -2,6 +2,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
+/*
+ * @author Colby R
+ * 
+ * Enemy bug object in Galaga
+ */
+
 public class Bug extends Brick {
 	private static final int WIDTH = 50;
 	private static final int HEIGHT = 20;
@@ -13,7 +19,7 @@ public class Bug extends Brick {
 		this.y = (double)y;
 	}
 	
-	
+	// handles collision with projectile
 	public int handleHit() {
 	    getView().setVisible(false);
 	    return getPointValue();

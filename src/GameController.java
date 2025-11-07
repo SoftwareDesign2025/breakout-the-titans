@@ -13,6 +13,8 @@ import javafx.scene.input.KeyCode;
  * 
  * Provides shared functionality such as score/lives display,
  * game over, and scene settup
+ * 
+ * @author Colby R, Tyler M, Joe L
  */
 public abstract class GameController {
 

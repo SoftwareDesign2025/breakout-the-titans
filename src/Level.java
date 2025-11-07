@@ -1,5 +1,11 @@
 import javafx.scene.Group;
 
+/*
+ * @author Colby R
+ * 
+ * Abstract superclass for a generic game level
+ */
+
 public abstract class Level {
 	
 	protected static final int SPACING = 3;
